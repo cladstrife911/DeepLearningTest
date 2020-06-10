@@ -1,6 +1,7 @@
 import sys
 import argparse
 from datetime import datetime
+import os
 
 import pandas
 
@@ -44,14 +45,16 @@ def main():
     #YData = datas.getYs()
 
     #print("gOutput:",gOutput)
-    f = open(gOutput, "w")
+    fd = os.open(gOutput, os.O_WRONLY)
     if(gIndex!=-1):
         line = datas.getSerializedX(gIndex)
     else:
         line = datas.getSerializedX(0)
     line = "feedle " + line + "\r"
     print(line)
-    f.write(line)
+    #line = line.encode()
+    os.write(fd, bytes(line,'UTF-8'))
+    os.close(fd)
 
     
        
