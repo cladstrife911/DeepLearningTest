@@ -16,9 +16,25 @@ import keras.callbacks
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import KFold
 from sklearn.preprocessing import StandardScaler
-from sklearn.pipeline import Pipeline
+import sklearn.metrics
 import numpy as np
 
+#class EarlyStoppingByLossVal(Callback):
+#    def __init__(self, monitor='val_loss', value=0.00001, verbose=0):
+#        super(Callback, self).__init__()
+#        self.monitor = monitor
+#        self.value = value
+#        self.verbose = verbose
+
+#    def on_epoch_end(self, epoch, logs={}):
+#        current = logs.get(self.monitor)
+#        if current is None:
+#            warnings.warn("Early stopping requires %s available!" % self.monitor, RuntimeWarning)
+
+#        if current < self.value:
+#            if self.verbose > 0:
+#                print("Epoch %05d: early stopping THR" % epoch)
+#            self.model.stop_training = True
 
 ####################
 # handle arguments passed to the script
@@ -86,7 +102,6 @@ def exportModel(model, filename):
     #get_weights() for a Dense layer returns a list of two elements, the first element contains the weights, and the second element contains the biases. So you can simply do:
     # weights = model.layers[0].get_weights()[0]
     # biases = model.layers[0].get_weights()[1]
-
     weights = model.get_weights()
     #model_cfg = model.get_config()
     np.savetxt(filename , weights , fmt='%s', delimiter=',')
@@ -106,9 +121,18 @@ def testPredict(filename, minVal, estimator):
     Xdata = loadX("XData.csv")
     Ydata = loadY("YData.csv")
     predictions = estimator.predict(Xdata)
-    for line in predictions:
-        line = line + minVal
-        print(line)
+    print("## testPredict ## minVal:", minVal)
+    dataset_est = pandas.DataFrame({'#X Est': predictions[:, 0], '#Y Est': predictions[:, 1], '#Z Est': predictions[:, 2]})
+    #print(dataset_est)
+    # Apply the initial correction on the real output
+    Ydata =Ydata + (-1*minVal)
+    dataset_real = pandas.DataFrame({'#X Real': Ydata[:, 0], '#Y Real': Ydata[:, 1], '#Z Real': Ydata[:, 2]})
+    #print(dataset_real)
+    print("## mean_squared_error :", sklearn.metrics.mean_squared_error(dataset_real.values, dataset_est.values))
+    print("## mean_absolute_error :", sklearn.metrics.mean_absolute_error(dataset_real.values, dataset_est.values))
+    print("## median_absolute_error :", sklearn.metrics.median_absolute_error(dataset_real.values, dataset_est.values))
+    print("## diff :", abs(dataset_real.values - dataset_est.values))
+
 
 ####################
 def main():
@@ -126,8 +150,14 @@ def main():
     estimator = baseline_model()
     printDate()
     print("## Start training ##")
-    tensorboard_callback = keras.callbacks.TensorBoard(log_dir="./logs")
-    estimator.fit(Xdata, Ydata, epochs=5, batch_size=50, callbacks=[tensorboard_callback])
+    callbacks = [
+        keras.callbacks.EarlyStopping(monitor="loss", min_delta=0.5, patience=3),
+        #EarlyStoppingByLossVal(monitor='val_loss', value=0.5, verbose=1),
+        # EarlyStopping(monitor='val_loss', patience=2, verbose=0),
+        #ModelCheckpoint(kfold_weights_path, monitor='val_loss', save_best_only=True, verbose=0),
+        keras.callbacks.TensorBoard(log_dir="./logs"),
+    ]
+    estimator.fit(Xdata, Ydata, epochs=10, batch_size=5, callbacks=callbacks)
    
     #estimator = KerasRegressor(build_fn=baseline_model, epochs=10, verbose=0)
     #kfold = KFold(n_splits=5, shuffle=True)
@@ -137,9 +167,9 @@ def main():
 
     printDate()
     print("## Training End ##")
-    #exportModel(estimator, "exported_model.csv")
+    exportModel(estimator, "exported_model.csv")
 
-    estimator.fit(Xdata, Ydata, callbacks=[tensorboard_callback])
+    estimator.fit(Xdata, Ydata)#, callbacks=[tensorboard_callback])
 
     testPredict("./datas/Test1_short.anl", minVal, estimator)
     testPredict("./datas/Test2_short.anl", minVal, estimator)
