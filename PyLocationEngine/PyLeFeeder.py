@@ -2,6 +2,8 @@ import sys
 import argparse
 from datetime import datetime
 import os
+import random
+import time
 
 import pandas
 
@@ -10,17 +12,26 @@ import DataAnalazyer as da
 gFilename = ""
 gOutput = ""
 gIndex = -1
+gNumber = 0
+gRandom = False
+gDelay = 10
 
 ####################
 # handle arguments passed to the script
 def handle_main_arg():
     global gFilename
     global gOutput
+    global gNumber
+    global gRandom
+    global gDelay
     parser = argparse.ArgumentParser()
     parser.add_argument("-v","--verbose", help="enable verbosity mode ", action="store_true")
     parser.add_argument("-f","--file", required=True, help="File name to read the data from")
     parser.add_argument("-o","--output", required=True, help="File name to write the command (ex: /home/pi/dev/spi0chip0/stdin)")
     parser.add_argument("-i","--index", help="index of the data in the file to be used")
+    parser.add_argument("-n","--number", type=int, help="number of sample to play")
+    parser.add_argument("-r","--random", help="play in random order", action="store_true")
+    parser.add_argument("-d","--delay", type=int, help="delay in ms between writing")
     args = parser.parse_args()
     if args.file:
         gFilename = args.file 
@@ -28,12 +39,21 @@ def handle_main_arg():
         gOutput = args.output
     if args.index:
         gIndex = args.index
+    if args.number:
+        gNumber = args.number
+    if args.random:
+        gRandom = True
+    if args.delay:
+        gDelay = args.delay
 
 ####################
 def main():
     global gOutput
     global gIndex
     global gFilename
+    global gRandom
+    global gNumber
+    global gDelay
 
     #print ("Python version:"+sys.version)
 
@@ -44,16 +64,24 @@ def main():
     #print(datas.getXinInt(0))
     #YData = datas.getYs()
 
-    #print("gOutput:",gOutput)
+    #Open the file to be written
     fd = os.open(gOutput, os.O_WRONLY)
-    if(gIndex!=-1):
+    #print("gOutput:",gOutput)
+    print("gNumber:",gNumber)
+
+    for c in range(gNumber):
+        if(gRandom):
+            gIndex = random.randint(0,datas.getNumberOfSamples())
+        else:
+            gIndex = c % datas.getNumberOfSamples()
         line = datas.getSerializedX(gIndex)
-    else:
-        line = datas.getSerializedX(0)
-    line = "feedle " + line + "\r"
-    print(line)
-    #line = line.encode()
-    os.write(fd, bytes(line,'UTF-8'))
+        line = "feedle " + line + "\r"
+        print(line)
+        os.write(fd, bytes(line,'UTF-8'))
+        #convert wait time in ms
+        time.sleep(gDelay/1000)
+
+    #Finaly close the file
     os.close(fd)
 
     

@@ -19,6 +19,9 @@ class DataAnalyzer:
         self._gNumberOfSample = self.dataframe.shape[0]
         #print("# of sample in file:", self._gNumberOfSample)
 
+    def getNumberOfSamples(self):
+        return self._gNumberOfSample
+
     # Get X values (used as input for deep learning)
     def getXs(self):
         return self._XData
