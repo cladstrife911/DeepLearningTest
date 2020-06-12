@@ -15,6 +15,7 @@ gIndex = -1
 gNumber = 0
 gRandom = False
 gDelay = 15
+gAlgo = 0
 
 ####################
 # handle arguments passed to the script
@@ -24,6 +25,7 @@ def handle_main_arg():
     global gNumber
     global gRandom
     global gDelay
+    global gAlgo
     parser = argparse.ArgumentParser()
     parser.add_argument("-v","--verbose", help="enable verbosity mode ", action="store_true")
     parser.add_argument("-f","--file", required=True, help="File name to read the data from")
@@ -32,6 +34,7 @@ def handle_main_arg():
     parser.add_argument("-n","--number", type=int, help="number of sample to play (-1 for infinite loop)")
     parser.add_argument("-r","--random", help="play in random order", action="store_true")
     parser.add_argument("-d","--delay", type=int, help="delay in ms between writing (min=15ms)")
+    parser.add_argument("-a","--algo", type=int, help="0 for 'feedle, 1 for 'feedlennt'")
     args = parser.parse_args()
     if args.file:
         gFilename = args.file 
@@ -45,6 +48,8 @@ def handle_main_arg():
         gRandom = True
     if args.delay and args.delay>=15:
         gDelay = args.delay
+    if args.algo:
+        gAlgo = args.algo
 
 ####################
 def main():
@@ -54,6 +59,7 @@ def main():
     global gRandom
     global gNumber
     global gDelay
+    global gAlgo
 
     #print ("Python version:"+sys.version)
 
@@ -77,8 +83,11 @@ def main():
             else:
                 gIndex = c % datas.getNumberOfSamples()
             line = datas.getSerializedX(gIndex)
-            line = "feedle " + line + "\r"
-            print(line)
+            if gAlgo:
+                line = "feedlennt " + line + "\r"
+            else:
+                line = "feedle " + line + "\r"
+            print("#"+c+":"+line)
             os.write(fd, bytes(line,'UTF-8'))
             #convert wait time in ms
             time.sleep(gDelay/1000)

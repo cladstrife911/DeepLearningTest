@@ -90,7 +90,6 @@ def baseline_model():
     model.add(Dense(64, activation='relu'))
     model.add(Dense(32, activation='relu'))
     model.add(Dense(16, activation='relu'))
-    model.add(Dense(8, activation='relu'))
     model.add(Dense(3, activation='relu'))
     #print(model.output_shape)
     print(model.summary())
@@ -102,6 +101,12 @@ def exportModel(model, filename):
     #get_weights() for a Dense layer returns a list of two elements, the first element contains the weights, and the second element contains the biases. So you can simply do:
     # weights = model.layers[0].get_weights()[0]
     # biases = model.layers[0].get_weights()[1]
+    i=1
+    for layer in model.layers:
+        np.savetxt("./output/W"+str(i)+".csv" , layer.get_weights()[0] , fmt='%s', delimiter=',')
+        np.savetxt("./output/B"+str(i)+".csv" , layer.get_weights()[1] , fmt='%s', delimiter=',')
+        i=i+1
+
     weights = model.get_weights()
     #model_cfg = model.get_config()
     np.savetxt(filename , weights , fmt='%s', delimiter=',')
@@ -109,25 +114,26 @@ def exportModel(model, filename):
     #with open(filename, "w") as json_file:
     #    json_file.write(model_json)
     # serialize weights to HDF5
-    #model.save_weights("model.h5")
-    print("Saved model to disk")
+    model.save_weights("model.h5")
+    print("model saved to disk")
 
 def printDate():
     now = datetime.now()
     print(now.strftime("%Y/%m/%d %H:%M:%S"))
 
 def testPredict(filename, minVal, estimator):
+    print("###################### testPredict ######################", minVal)
     prepareCsv(filename)
     Xdata = loadX("XData.csv")
     Ydata = loadY("YData.csv")
     predictions = estimator.predict(Xdata)
-    print("## testPredict ## minVal:", minVal)
+    #print("## testPredict ## minVal:", minVal)
     dataset_est = pandas.DataFrame({'#X Est': predictions[:, 0], '#Y Est': predictions[:, 1], '#Z Est': predictions[:, 2]})
-    #print(dataset_est)
+    print("Estimated:", dataset_est)
     # Apply the initial correction on the real output
     Ydata =Ydata + (-1*minVal)
     dataset_real = pandas.DataFrame({'#X Real': Ydata[:, 0], '#Y Real': Ydata[:, 1], '#Z Real': Ydata[:, 2]})
-    #print(dataset_real)
+    print("Real:", dataset_real)
     print("## mean_squared_error :", sklearn.metrics.mean_squared_error(dataset_real.values, dataset_est.values))
     print("## mean_absolute_error :", sklearn.metrics.mean_absolute_error(dataset_real.values, dataset_est.values))
     print("## median_absolute_error :", sklearn.metrics.median_absolute_error(dataset_real.values, dataset_est.values))
@@ -151,15 +157,15 @@ def main():
     printDate()
     print("## Start training ##")
     callbacks = [
-        keras.callbacks.EarlyStopping(monitor="loss", min_delta=0.5, patience=3),
+        keras.callbacks.EarlyStopping(monitor="loss", min_delta=0.0001, patience=3),
         #EarlyStoppingByLossVal(monitor='val_loss', value=0.5, verbose=1),
         # EarlyStopping(monitor='val_loss', patience=2, verbose=0),
         #ModelCheckpoint(kfold_weights_path, monitor='val_loss', save_best_only=True, verbose=0),
         keras.callbacks.TensorBoard(log_dir="./logs"),
     ]
-    estimator.fit(Xdata, Ydata, epochs=10, batch_size=5, callbacks=callbacks)
+    estimator.fit(Xdata, Ydata, epochs=100, batch_size=5, callbacks=callbacks)
    
-    #estimator = KerasRegressor(build_fn=baseline_model, epochs=10, verbose=0)
+    #estimator = KerasRegressor(build_fn=baseline_model, epochs=10, verbose=1)
     #kfold = KFold(n_splits=5, shuffle=True)
     #scores = cross_val_score(estimator, Xdata, Ydata, cv=kfold)
     #print("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
@@ -171,16 +177,17 @@ def main():
 
     estimator.fit(Xdata, Ydata)#, callbacks=[tensorboard_callback])
 
-    testPredict("./datas/Test1_short.anl", minVal, estimator)
-    testPredict("./datas/Test2_short.anl", minVal, estimator)
+    testPredict("./datas/Test1_short.csv", minVal, estimator)
+    testPredict("./datas/Test2_short.csv", minVal, estimator)
 
-    try:
-        while True:
-            time.sleep(1)
+    print("## End of script ##")
+    #try:
+    #    while True:
+    #        time.sleep(1)
                 
-    except KeyboardInterrupt:
-        #logging.info("exiting")
-        print("Exit on KeyboardInterrupt")
+    #except KeyboardInterrupt:
+    #    #logging.info("exiting")
+    #    print("Exit on KeyboardInterrupt")
 
 ####################
 if __name__ == "__main__":
