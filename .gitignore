@@ -1,1 +1,9 @@
 /PyLocationEngine/*.txt
+/PyLocationEngine/3.7_32bits/
+/PyLocationEngine/datas/*.csv
+/PyLocationEngine/datas/*.anl
+/PyLocationEngine/datas/*.png
+/PyLocationEngine/env/
+/PyLocationEngine/logs/
+/PyLocationEngine/output/
+/PyLocationEngine/models/
