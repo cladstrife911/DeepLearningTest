@@ -19,8 +19,7 @@ class DataAnalyzer:
     def __init__(self, filename):
         self._filename = filename
         with open(self._filename, newline='') as file:
-            line = file.readline()
-            if(line.find("[UwbM] LE")):
+            if'[UwbM] LE' in file.read():
                 print("Log from stderr")
                 self._filetype = "stderr"
             else:
