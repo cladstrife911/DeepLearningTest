@@ -87,7 +87,7 @@ def main():
                 line = "feedlennt " + line + "\r"
             else:
                 line = "feedle " + line + "\r"
-            print("#"+c+":"+line)
+            print("#"+str(c)+":"+line)
             os.write(fd, bytes(line,'UTF-8'))
             #convert wait time in ms
             time.sleep(gDelay/1000)
@@ -95,7 +95,7 @@ def main():
         #Finaly close the file
         os.close(fd)
     except IOError:
-        print("Error with the file:", gFilename)
+        print("Error with the file:", gOutput)
     except KeyboardInterrupt:
         print("Terminated by KeyboardInterrupt")
 
