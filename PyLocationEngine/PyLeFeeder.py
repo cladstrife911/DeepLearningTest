@@ -7,7 +7,7 @@ import time
 
 import pandas
 
-import DataAnalazyer as da
+import DataAnalyzer as da
 
 gFilename = ""
 gOutput = ""
@@ -34,7 +34,7 @@ def handle_main_arg():
     parser.add_argument("-n","--number", type=int, help="number of sample to play (-1 for infinite loop)")
     parser.add_argument("-r","--random", help="play in random order", action="store_true")
     parser.add_argument("-d","--delay", type=int, help="delay in ms between writing (min=15ms)")
-    parser.add_argument("-a","--algo", type=int, help="0 for 'feedle, 1 for 'feedlennt'")
+    parser.add_argument("-a","--algo", type=int, help="0 for 'feedle', 1 for 'feedlennt'")
     args = parser.parse_args()
     if args.file:
         gFilename = args.file 
@@ -44,6 +44,8 @@ def handle_main_arg():
         gIndex = args.index
     if args.number:
         gNumber = args.number
+    else:
+        gNumber=-1
     if args.random:
         gRandom = True
     if args.delay and args.delay>=15:
