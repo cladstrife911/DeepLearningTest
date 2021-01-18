@@ -23,7 +23,7 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="DataAnalazyer.py" />
+    <Compile Include="DataAnalyzer.py" />
     <Compile Include="PyLeFeeder.py" />
     <Compile Include="PyLocationEngine.py" />
   </ItemGroup>
