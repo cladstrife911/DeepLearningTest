@@ -35,12 +35,13 @@ def handle_main_arg():
     global gAlgo
     global gIp
     global gPort
+    global gIndex
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-v","--verbose", help="enable verbosity mode ", action="store_true")
     parser.add_argument("-f","--file", required=True, help="File name to read the data from")
     parser.add_argument("-o","--output", help="File name to write the command (ex: /home/pi/dev/spi0chip0/stdin)")
-    parser.add_argument("-i","--index", help="index of the data in the file to be used")
+    parser.add_argument("-i","--index", type=int, help="index offset of the data in the file to be used")
     parser.add_argument("-n","--number", type=int, help="number of sample to play (-1 for infinite loop)")
     parser.add_argument("-r","--random", help="play in random order", action="store_true")
     parser.add_argument("-d","--delay", type=int, help="delay in ms between writing (min=15ms)")
@@ -106,7 +107,9 @@ def main():
             if(gRandom):
                 gIndex = random.randint(0,datas.getNumberOfSamples())
             else:
-                gIndex = c % datas.getNumberOfSamples()
+                gIndex +=1
+            #else:
+            #    gIndex = c % datas.getNumberOfSamples()
             line = datas.getSerializedX(gIndex)
             if gAlgo:
                 line = "feedlennt " + line + "\r"
@@ -127,7 +130,7 @@ def main():
             #convert wait time in ms
             time.sleep(gDelay/1000)
 
-        if (gIp != ""):
+        if (gIp == ""):
             #Finaly close the file
             os.close(fd)
         else:
